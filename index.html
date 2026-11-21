@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>75SOFT</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            stone: { 850: '#1c1917', 950: '#0c0a09' },
+            sage: { 500: '#587a64', 600: '#44614e', 750: '#2d3f33' }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    [x-cloak] { display: none !important; }
+  </style>
+</head>
+<body class="h-full bg-[#fcfbf9] dark:bg-stone-950 text-stone-900 dark:text-stone-100 flex flex-col antialiased transition-colors duration-300" x-data="appData()" x-init="init()">
+
+  <!-- Top Header Bar -->
+  <header class="sticky top-0 z-30 bg-[#fcfbf9]/90 dark:bg-stone-950/90 backdrop-blur-md border-b border-stone-200/80 dark:border-stone-800 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+      <span class="text-xs uppercase tracking-widest font-semibold px-2 py-0.5 rounded bg-sage-500/10 text-sage-600 dark:text-sage-400 border border-sage-500/20">75SOFT</span>
+      <h1 class="text-lg font-bold tracking-tight">Daily Tracker</h1>
+    </div>
+    <div class="flex items-center space-x-3">
+      <button @click="toggleDarkMode()" class="p-2 rounded-full hover:bg-stone-200 dark:hover:bg-stone-800 transition text-stone-600 dark:text-stone-400">
+        <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        <svg x-show="darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      </button>
+      <button @click="settingsOpen = true" class="p-2 rounded-full hover:bg-stone-200 dark:hover:bg-stone-800 transition text-stone-600 dark:text-stone-400">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 overflow-y-auto pb-24 px-4 pt-4 max-w-lg mx-auto w-full">
+
+    <!-- TAB 1: TODAY -->
+    <div x-show="activeTab === 'today'" x-transition.opacity>
+      <!-- Date & Day Counter Header -->
+      <div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 mb-4 shadow-sm flex items-center justify-between">
+        <div>
+          <div class="flex items-center space-x-2">
+            <button @click="changeDate(-1)" class="p-1 rounded hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+            <span class="text-sm font-semibold" x-text="formatDisplayDate(currentDateStr)"></span>
+            <button @click="changeDate(1)" class="p-1 rounded hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500" :disabled="isToday(currentDateStr)" :class="{'opacity-30 cursor-not-allowed': isToday(currentDateStr)}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+          </div>
+          <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5" x-text="getDaySubtitle()"></p>
+        </div>
+        <div class="text-right">
+          <span class="text-2xl font-black text-sage-600 dark:text-sage-400" x-text="'Day ' + currentDayNumber"></span>
+          <p class="text-[10px] uppercase tracking-wider text-stone-400">of 75</p>
+        </div>
+      </div>
+
+      <!-- Core Pillars Checklist -->
+      <div class="space-y-3 mb-6">
+        <!-- 1. 45 Min Movement -->
+        <div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 shadow-sm transition" :class="{'border-sage-500/50 bg-sage-500/5 dark:bg-sage-500/1odiag': todayLog.workout}">
+          <div class="flex items-start justify-between">
+            <div class="flex items-start space-x-3 cursor-pointer select-none flex-1" @click="todayLog.workout = !todayLog.workout; saveLogs()">
+              <div class="w-6 h-6 rounded-lg border-2 flex items-center justify-center mt-0.5 transition" :class="todayLog.workout ? 'bg-sage-600 border-sage-600 text-white' : 'border-stone-300 dark:border-stone-700'">
+                <svg x-show="todayLog.workout" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-sm">45-Min Movement</h3>
+                <p class="text-xs text-stone-500 dark:text-stone-400">Outdoor walk, gym session, or yoga flow</p>
+              </div>
+            </div>
+            <button @click="todayLog.activeRecovery = !todayLog.activeRecovery; saveLogs()" class="text-[11px] px-2.5 py-1 rounded-full border transition" :class="todayLog.activeRecovery ? 'bg-amber-500 text-white border-amber-500' : 'border-stone-300 dark:border-stone-700 text-stone-500'">
+              <span x-text="todayLog.activeRecovery ? 'Active Recovery ✓' : 'Mark Recovery'"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Water Intake (3L) -->
+        <div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-3 select-none">
+              <div class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition" :class="todayLog.waterMl >= 3000 ? 'bg-sage-600 border-sage-600 text-white' : 'border-stone-300 dark:border-stone-700'">
+                <svg x-show="todayLog.waterMl >= 3000" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-sm">3 Liters Water</h3>
+                <p class="text-xs text-stone-500 dark:text-stone-400" x-text="(todayLog.waterMl / 1000).toFixed(1) + 'L / 3.0L logged'"></p>
+              </div>
+            </div>
+            <span class="text-xs font-semibold text-sage-600 dark:text-sage-400" x-text="Math.round((todayLog.waterMl / 3000) * 100) + '%'"></span>
+          </div>
+          <!-- Progress bar -->
+          <div class="w-full bg-stone-100 dark:bg-stone-800 h-2 rounded-full overflow-hidden mb-3">
+            <div class="bg-sage-600 h-full transition-all duration-300" :style="'width: ' + Math.min(100, (todayLog.waterMl / 3000) * 100) + '%'"></div>
+          </div>
+          <!-- Water quick add buttons -->
+          <div class="flex items-center justify-between gap-2">
+            <button @click="addWater(-500)" class="flex-1 py-1.5 text-xs bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-lg transition font-medium">-500ml</button>
+            <button @click="addWater(250)" class="flex-1 py-1.5 text-xs bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-lg transition font-medium">+250ml</button>
+            <button @click="addWater(500)" class="flex-1 py-1.5 text-xs bg-sage-500/10 text-sage-600 dark:text-sage-400 border border-sage-500/20 hover:bg-sage-500/20 rounded-lg transition font-medium">+500ml</button>
+            <button @click="addWater(1000)" class="flex-1 py-1.5 text-xs bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-lg transition font-medium">+1L</button>
+          </div>
+        </div>
+
+        <!-- 3. Eat Well / Mindful Alcohol -->
+        <div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 shadow-sm transition" :class="{'border-sage-500/50 bg-sage-500/5 dark:bg-sage-500/10': todayLog.diet}">
+          <div class="flex items-start space-x-3 cursor-pointer select-none" @click="todayLog.diet = !todayLog.diet; saveLogs()">
+            <div class="w-6 h-6 rounded-lg border-2 flex items-center justify-center mt-0.5 transition" :class="todayLog.diet ? 'bg-sage-600 border-sage-600 text-white' : 'border-stone-300 dark:border-stone-700'">
+              <svg x-show="todayLog.diet" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-sm">Eat Well & Mindful Alcohol</h3>
+              <p class="text-xs text-stone-500 dark:text-stone-400">Nourishing meals, no binge drinking</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Read 10 Pages -->
+        <div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 shadow-sm transition" :class="{'border-sage-500/50 bg-sage-500/5 dark:bg-sage-500/10': todayLog.reading}">
+          <div class="flex items-start space-x-3 cursor-pointer select-none" @click="todayLog.reading = !todayLog.reading; saveLogs()">
+            <div class="w-6 h-6 rounded-lg border-2 flex items-center justify-center mt-0.5 transition" :class="todayLog.reading ? 'bg-sage-600 border-sage-600 text-white' : 'border-stone-300 dark:border-stone-700'">
+              <svg x-show="todayLog.reading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-sm">Read 10 Pages</h3>
+              <p class="text-xs text-stone-500 dark:text-stone-400">Non-fiction, fiction, or personal growth</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Small Daily Notebox -->
+      <div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 shadow-sm mb-6">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">Daily Notes & Reflection</label>
+        <textarea x-model="todayLog.notes" @input="saveLogs()" rows="3" placeholder="How did today go? What book are you reading?" class="w-full text-sm bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl p-3 focus:outline-none focus:border-sage-500 resize-none"></textarea>
+      </div>
+    </div>
+
+
+    <!-- TAB 2: WORKOUTS & TIMER -->
+    <div x-show="activeTab === 'workouts'" x-cloak x-transition.opacity>
+      <!-- Offline Timer Component -->
+      <div class="bg-stone-900 text-stone-100 rounded-2xl p-5 mb-6 shadow-md border border-stone-800 text-center">
+        <span class="text-[10px] uppercase tracking-widest text-sage-400 font-semibold">Interval & Rest Timer</span>
+        <div class="text-5xl font-mono font-bold my-3 tracking-wider" x-text="formatTime(timerSeconds)"></div>
+        
+        <!-- Preset Buttons -->
+        <div class="flex items-center justify-center gap-2 mb-4">
+          <button @click="setTimer(30)" class="px-3 py-1 bg-stone-800 hover:bg-stone-700 rounded-lg text-xs font-medium transition">30s</button>
+          <button @click="setTimer(60)" class="px-3 py-1 bg-stone-800 hover:bg-stone-700 rounded-lg text-xs font-medium transition">60s</button>
+          <button @click="setTimer(120)" class="px-3 py-1 bg-stone-800 hover:bg-stone-700 rounded-lg text-xs font-medium transition">120s</button>
+          <button @click="setTimer(0)" class="px-3 py-1 bg-stone-800 hover:bg-stone-700 rounded-lg text-xs font-medium transition text-rose-400">Reset</button>
+        </div>
+
+        <!-- Timer Controls -->
+        <div class="flex items-center justify-center gap-3">
+          <button @click="toggleTimer()" class="flex-1 py-2.5 bg-sage-600 hover:bg-sage-500 text-white font-semibold rounded-xl text-sm transition shadow" x-text="timerRunning ? 'Pause' : 'Start'"></button>
+        </div>
+      </div>
+
+      <!-- Custom Saved Workouts Section -->
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-stone-400">Saved Workouts</h2>
+        <button @click="openWorkoutModal()" class="text-xs font-semibold text-sage-600 dark:text-sage-400 hover:underline">+ New Workout</button>
+      </div>
+
+      <div class="space-y-3 mb-6">
+        <template x-for="(workout, index) in workouts" :key="index">
+          <div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <h3 class="font-semibold text-sm" x-text="workout.name"></h3>
+                <p class="text-xs text-sage-600 dark:text-sage-400 font-medium" x-text="workout.duration + ' mins'"></p>
+              </div>
+              <div class="flex items-center space-x-1">
+                <button @click="logWorkoutToToday(workout)" class="text-[11px] bg-sage-500/10 text-sage-600 dark:text-sage-400 px-2.5 py-1 rounded-lg border border-sage-500/20 hover:bg-sage-500/20 transition font-medium">Log to Today</button>
+                <button @click="deleteWorkout(index)" class="p-1.5 text-stone-400 hover:text-rose-500 rounded-lg transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+              </div>
+            </div>
+            <p class="text-xs text-stone-500 dark:text-stone-400 whitespace-pre-line" x-text="workout.details"></p>
+          </div>
+        </template>
+        <div x-show="workouts.length === 0" class="text-center py-8 text-stone-400 text-xs">
+          No custom workouts saved yet. Create one above!
+        </div>
+      </div>
+    </div>
+
+
+    <!-- TAB 3: PROGRESS & WEIGHT -->
+    <div x-show="activeTab === 'progress'" x-cloak x-transition.opacity>
+      <!-- 75-Day Grid -->
+      <div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 shadow-sm mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-stone-400">75-Day Journey Map</h2>
+          <span class="text-xs font-semibold text-sage-600 dark:text-sage-400" x-text="totalCompletedDays() + ' / 75 Days Completed'"></span>
+        </div>
+        <!-- 75 Squares Grid -->
+        <div class="grid grid-cols-10 gap-1.5">
+          <template x-for="dayNum in 75" :key="dayNum">
+            <div class="aspect-square rounded-md flex items-center justify-center text-[10px] font-semibold transition"
+                 :class="getDayGridColor(dayNum)"
+                 x-text="dayNum"
+                 @click="jumpToDay(dayNum)"
+                 title="Tap to jump to date">
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Weight Tracker Section -->
+      <div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 shadow-sm mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-stone-400">Weight Tracker</h2>
+          <button @click="openWeightModal()" class="text-xs font-semibold text-sage-600 dark:text-sage-400 hover:underline">+ Add Entry</button>
+        </div>
+        
+        <!-- Weight History List -->
+        <div class="space-y-2">
+          <template x-for="(entry, index) in weightEntries" :key="index">
+            <div class="flex items-center justify-between text-xs py-2 border-b border-stone-100 dark:border-stone-800/60 last:border-0">
+              <span class="text-stone-500" x-text="entry.date"></span>
+              <div class="flex items-center space-x-3">
+                <span class="font-bold text-sm" x-text="entry.weight + ' kg'"></span>
+                <button @click="deleteWeight(index)" class="text-stone-400 hover:text-rose-500">×</button>
+              </div>
+            </div>
+          </template>
+          <div x-show="weightEntries.length === 0" class="text-center py-4 text-stone-400 text-xs">
+            No weight logs added yet.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 z-30 bg-[#fcfbf9]/95 dark:bg-stone-950/95 backdrop-blur-md border-t border-stone-200/80 dark:border-stone-800 px-6 py-2 flex items-center justify-around max-w-lg mx-auto">
+    <button @click="activeTab = 'today'" class="flex flex-col items-center py-1 transition" :class="activeTab === 'today' ? 'text-sage-600 dark:text-sage-400 font-bold' : 'text-stone-400 hover:text-stone-600'">
+      <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      <span class="text-[10px] tracking-tight">Today</span>
+    </button>
+    <button @click="activeTab = 'workouts'" class="flex flex-col items-center py-1 transition" :class="activeTab === 'workouts' ? 'text-sage-600 dark:text-sage-400 font-bold' : 'text-stone-400 hover:text-stone-600'">
+      <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span class="text-[10px] tracking-tight">Workouts</span>
+    </button>
+    <button @click="activeTab = 'progress'" class="flex flex-col items-center py-1 transition" :class="activeTab === 'progress' ? 'text-sage-600 dark:text-sage-400 font-bold' : 'text-stone-400 hover:text-stone-600'">
+      <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span class="text-[10px] tracking-tight">Progress</span>
+    </button>
+  </nav>
+
+
+  <!-- MODALS -->
+
+  <!-- New Workout Modal -->
+  <div x-show="workoutModalOpen" x-cloak class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div @click.away="workoutModalOpen = false" class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl p-5 w-full max-w-sm shadow-xl">
+      <h3 class="font-bold text-base mb-4">Create Workout</h3>
+      <div class="space-y-3 mb-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">Workout Name</label>
+          <input type="text" x-model="newWorkout.name" placeholder="e.g. Upper Body & Core" class="w-full text-sm bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl p-3 focus:outline-none focus:border-sage-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">Duration (Minutes)</label>
+          <input type="number" x-model="newWorkout.duration" placeholder="45" class="w-full text-sm bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl p-3 focus:outline-none focus:border-sage-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">Exercises & Notes</label>
+          <textarea x-model="newWorkout.details" rows="3" placeholder="List exercises or instructions..." class="w-full text-sm bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl p-3 focus:outline-none focus:border-sage-500 resize-none"></textarea>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button @click="workoutModalOpen = false" class="flex-1 py-2.5 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-xl text-sm font-semibold">Cancel</button>
+        <button @click="saveNewWorkout()" class="flex-1 py-2.5 bg-sage-600 hover:bg-sage-500 text-white rounded-xl text-sm font-semibold">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weight Modal -->
+  <div x-show="weightModalOpen" x-cloak class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div @click.away="weightModalOpen = false" class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl p-5 w-full max-w-sm shadow-xl">
+      <h3 class="font-bold text-base mb-4">Log Weight</h3>
+      <div class="space-y-3 mb-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">Weight (kg)</label>
+          <input type="number" step="0.1" x-model="newWeightVal" placeholder="70.5" class="w-full text-sm bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl p-3 focus:outline-none focus:border-sage-500">
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button @click="weightModalOpen = false" class="flex-1 py-2.5 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-xl text-sm font-semibold">Cancel</button>
+        <button @click="saveNewWeight()" class="flex-1 py-2.5 bg-sage-600 hover:bg-sage-500 text-white rounded-xl text-sm font-semibold">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div x-show="settingsOpen" x-cloak class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div @click.away="settingsOpen = false" class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl p-5 w-full max-w-sm shadow-xl">
+      <h3 class="font-bold text-base mb-4">Settings</h3>
+      <div class="space-y-4 mb-6">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">Start Date (Day 1)</label>
+          <input type="date" x-model="startDate" @change="saveSettings()" class="w-full text-sm bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl p-3 focus:outline-none focus:border-sage-500">
+        </div>
+      </div>
+      <button @click="settingsOpen = false" class="w-full py-2.5 bg-sage-600 hover:bg-sage-500 text-white rounded-xl text-sm font-semibold">Done</button>
+    </div>
+  </div>
+
+
+  <!-- JavaScript App Logic -->
+  <script>
+    function appData() {
+      return {
+        activeTab: 'today',
+        darkMode: false,
+        settingsOpen: false,
+        workoutModalOpen: false,
+        weightModalOpen: false,
+        startDate: new Date().toISOString().split('T')[0],
+        currentDateStr: new Date().toISOString().split('T')[0],
+        
+        logs: {},
+        workouts: [],
+        weightEntries: [],
+
+        newWorkout: { name: '', duration: '', details: '' },
+        newWeightVal: '',
+
+        // Timer state
+        timerSeconds: 0,
+        timerInterval: null,
+        timerRunning: false,
+
+        init() {
+          // Load stored data
+          const storedLogs = localStorage.getItem('75soft_logs');
+          if (storedLogs) this.logs = JSON.parse(storedLogs);
+
+          const storedWorkouts = localStorage.getItem('75soft_workouts');
+          if (storedWorkouts) this.workouts = JSON.parse(storedWorkouts);
+
+          const storedWeights = localStorage.getItem('75soft_weights');
+          if (storedWeights) this.weightEntries = JSON.parse(storedWeights);
+
+          const storedStart = localStorage.getItem('75soft_startdate');
+          if (storedStart) this.startDate = storedStart;
+
+          const storedDark = localStorage.getItem('75soft_dark');
+          if (storedDark === 'true') {
+            this.darkMode = true;
+            document.documentElement.classList.add('dark');
+          }
+        },
+
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('75soft_dark', 'true');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('75soft_dark', 'false');
+          }
+        },
+
+        get todayLog() {
+          if (!this.logs[this.currentDateStr]) {
+            this.logs[this.currentDateStr] = { workout: false, activeRecovery: false, waterMl: 0, diet: false, reading: false, notes: '' };
+          }
+          return this.logs[this.currentDateStr];
+        },
+
+        saveLogs() {
+          localStorage.setItem('75soft_logs', JSON.stringify(this.logs));
+        },
+
+        saveSettings() {
+          localStorage.setItem('75soft_startdate', this.startDate);
+        },
+
+        addWater(amount) {
+          this.todayLog.waterMl = Math.max(0, this.todayLog.waterMl + amount);
+          this.saveLogs();
+        },
+
+        changeDate(days) {
+          const d = new Date(this.currentDateStr);
+          d.setDate(d.getDate() + days);
+          this.currentDateStr = d.toISOString().split('T')[0];
+        },
+
+        isToday(dateStr) {
+          return dateStr === new Date().toISOString().split('T')[0];
+        },
+
+        formatDisplayDate(dateStr) {
+          const options = { weekday: 'short', month: 'short', day: 'numeric' };
+          return new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, options);
+        },
+
+        get currentDayNumber() {
+          const start = new Date(this.startDate + 'T00:00:00');
+          const current = new Date(this.currentDateStr + 'T00:00:00');
+          const diffTime = current - start;
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          return Math.max(1, Math.min(75, diffDays));
+        },
+
+        getDaySubtitle() {
+          if (this.isToday(this.currentDateStr)) return 'Today\'s Progress';
+          return 'Viewing past day';
+        },
+
+        jumpToDay(dayNum) {
+          const start = new Date(this.startDate + 'T00:00:00');
+          start.setDate(start.getDate() + (dayNum - 1));
+          this.currentDateStr = start.toISOString().split('T')[0];
+          this.activeTab = 'today';
+        },
+
+        totalCompletedDays() {
+          let count = 0;
+          for (let dayNum = 1; dayNum <= 75; dayNum++) {
+            const start = new Date(this.startDate + 'T00:00:00');
+            start.setDate(start.getDate() + (dayNum - 1));
+            const dateStr = start.toISOString().split('T')[0];
+            const log = this.logs[dateStr];
+            if (log && log.workout && log.waterMl >= 3000 && log.diet && log.reading) {
+              count++;
+            }
+          }
+          return count;
+        },
+
+        getDayGridColor(dayNum) {
+          const start = new Date(this.startDate + 'T00:00:00');
+          start.setDate(start.getDate() + (dayNum - 1));
+          const dateStr = start.toISOString().split('T')[0];
+          const log = this.logs[dateStr];
+          
+          if (!log) return 'bg-stone-100 dark:bg-stone-800 text-stone-400';
+          const completed = (log.workout ? 1 : 0) + (log.waterMl >= 3000 ? 1 : 0) + (log.diet ? 1 : 0) + (log.reading ? 1 : 0);
+          
+          if (completed === 4) return 'bg-sage-600 text-white font-bold';
+          if (completed > 0) return 'bg-sage-500/30 text-stone-800 dark:text-stone-200';
+          return 'bg-stone-100 dark:bg-stone-800 text-stone-400';
+        },
+
+        // Workout methods
+        openWorkoutModal() {
+          this.newWorkout = { name: '', duration: '', details: '' };
+          this.workoutModalOpen = true;
+        },
+
+        saveNewWorkout() {
+          if (!this.newWorkout.name) return;
+          this.workouts.push({ ...this.newWorkout });
+          localStorage.setItem('75soft_workouts', JSON.stringify(this.workouts));
+          this.workoutModalOpen = false;
+        },
+
+        deleteWorkout(index) {
+          this.workouts.splice(index, 1);
+          localStorage.setItem('75soft_workouts', JSON.stringify(this.workouts));
+        },
+
+        logWorkoutToToday(workout) {
+          this.todayLog.workout = true;
+          const noteText = `Workout: ${workout.name} (${workout.duration} mins)`;
+          this.todayLog.notes = this.todayLog.notes ? this.todayLog.notes + '\n' + noteText : noteText;
+          this.saveLogs();
+          this.activeTab = 'today';
+        },
+
+        // Weight methods
+        openWeightModal() {
+          this.newWeightVal = '';
+          this.weightModalOpen = true;
+        },
+
+        saveNewWeight() {
+          if (!this.newWeightVal) return;
+          this.weightEntries.unshift({ date: new Date().toLocaleDateString(), weight: this.newWeightVal });
+          localStorage.setItem('75soft_weights', JSON.stringify(this.weightEntries));
+          this.weightModalOpen = false;
+        },
+
+        deleteWeight(index) {
+          this.weightEntries.splice(index, 1);
+          localStorage.setItem('75soft_weights', JSON.stringify(this.weightEntries));
+        },
+
+        // Timer methods
+        setTimer(secs) {
+          this.timerSeconds = secs;
+          this.timerRunning = false;
+          clearInterval(this.timerInterval);
+        },
+
+        toggleTimer() {
+          if (this.timerRunning) {
+            this.timerRunning = false;
+            clearInterval(this.timerInterval);
+          } else {
+            if (this.timerSeconds <= 0) return;
+            this.timerRunning = true;
+            this.timerInterval = setInterval(() => {
+              if (this.timerSeconds > 0) {
+                this.timerSeconds--;
+              } else {
+                this.timerRunning = false;
+                clearInterval(this.timerInterval);
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+              }
+            }, 1000);
+          }
+        },
+
+        formatTime(sec) {
+          const m = Math.floor(sec / 60);
+          const s = sec % 60;
+          return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
